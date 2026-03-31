@@ -5,47 +5,51 @@ Aplicação desktop para gerenciamento de uma academia, desenvolvida em Java Swi
 ## Tecnologias
 
 - Java 17
-- Java Swing (interface gráfica)
+- Java Swing com Nimbus Look and Feel
 - PostgreSQL
 - JDBC com PreparedStatement
 - Maven
 
 ## Banco de dados
 
-O banco segue um modelo conceitual com herança (Pessoa → Aluno/Instrutor), entidade associativa (Assinatura) e especialização (Musculação). São 15 tabelas ao todo:
+O banco segue um modelo conceitual com herança (Pessoa → Aluno/Instrutor), entidade associativa (Assinatura), especialização (Musculação) e auto-relacionamento (Instrutor supervisa Instrutor). São 13 tabelas:
 
 | Tabela | Descrição |
 |--------|-----------|
-| **pessoa** | Supertipo com CPF, nome, email e endereço |
-| **telefone_pessoa** | Telefones (multivalorado) |
+| **pessoa** | Supertipo com CPF, nome, email e endereço (atributo composto) |
+| **telefone_pessoa** | Telefones (atributo multivalorado) |
 | **aluno** | Herda de Pessoa — matrícula, status, obs. saúde |
-| **instrutor** | Herda de Pessoa — CREF, salário, supervisor |
+| **instrutor** | Herda de Pessoa — CREF, salário, auto-relacionamento (supervisor) |
 | **plano** | Planos da academia (duração e valor) |
 | **assinatura** | Entidade associativa Aluno ↔ Plano (PK composta) |
-| **pagamento** | Pagamentos vinculados a assinaturas |
+| **pagamento** | Entidade fraca vinculada a assinatura |
 | **atividade** | Atividades oferecidas (Crossfit, Yoga, etc.) |
-| **musculacao** | Especialização de Atividade |
-| **modalidade** | Níveis (Iniciante, Intermediário, Avançado) |
-| **aula** | Aulas com data, modalidade e instrutor responsável |
-| **equipamento** | Equipamentos da academia |
-| **manutencao** | Manutenções de equipamentos |
-| **frequenta** | Registro de frequência dos alunos nas atividades |
-| **utiliza** | Equipamentos utilizados por cada atividade |
+| **musculacao** | Especialização total/disjunta de Atividade |
+| **modalidade** | Níveis das atividades (Iniciante, Intermediário, Avançado) |
+| **aula** | Entidade fraca — aulas com data, modalidade e instrutor |
+| **equipamento** | Equipamentos da academia vinculados a atividades |
+| **manutencao** | Entidade fraca — manutenções de equipamentos |
 
 ### Constraints e regras
 
 - **CHECK** para validar valores numéricos (salário > 0, valor > 0, duração > 0) e restringir texto (status só aceita valores definidos, nível da modalidade, etc.)
-- **DEFAULT** em datas de cadastro, status de assinatura, nível de modalidade
+- **DEFAULT** em datas de cadastro, status de assinatura, nível de modalidade, descrição de atividade/equipamento
 - **UNIQUE** em CPF, email, nome de plano e modalidade
 - **ON UPDATE CASCADE** entre assinatura e plano
-- **ON DELETE CASCADE** em telefone_pessoa
+- **ON DELETE SET NULL** entre aula e instrutor (se deletar o instrutor, a aula fica sem responsável)
 - **Chave composta** na assinatura (dt_assinatura, nro_matric, cod_plano)
 - **Auto-referência** no instrutor (cref_supervisor → instrutor)
+- **Sequências** para geração automática de IDs (seq_nro_matric, seq_plano, seq_pagamento, etc.)
+
+### Dados de exemplo
+
+Cada tabela possui ao menos 30 tuplas inseridas, totalizando mais de 400 registros.
 
 ## Interface
 
-A aplicação possui 7 abas:
+A aplicação possui 8 abas:
 
+- **Dashboard** — Estatísticas da academia (total de alunos, receita, pagamentos pendentes, etc.)
 - **Alunos** — CRUD completo com dados pessoais, endereço e telefone
 - **Instrutores** — CRUD com CREF, salário e supervisor
 - **Planos** — CRUD com duração e valor mensal
@@ -53,6 +57,15 @@ A aplicação possui 7 abas:
 - **Pagamentos** — CRUD vinculado a assinaturas
 - **Atividades** — CRUD de atividades oferecidas
 - **Equipamentos** — CRUD de equipamentos
+
+### Funcionalidades extras
+
+- Busca em tempo real em todas as tabelas
+- Exportação para CSV (compatível com Excel)
+- Validação de campos obrigatórios
+- Máscaras automáticas de CPF, telefone, CEP e datas
+- Sistema de design com cores semânticas (Tema.java)
+- Botões com hierarquia visual (primário, secundário, perigo)
 
 ## Como rodar
 
@@ -124,7 +137,10 @@ ENTREGA_BD_copia/
     │   ├── AtividadeDAO.java
     │   └── EquipamentoDAO.java
     └── tela/
+        ├── Tema.java
+        ├── Mascara.java
         ├── TelaPrincipal.java
+        ├── TelaDashboard.java
         ├── TelaAluno.java
         ├── TelaInstrutor.java
         ├── TelaPlano.java
