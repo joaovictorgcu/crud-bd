@@ -2,6 +2,8 @@ package com.academia.tela;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class TelaPrincipal extends JFrame {
 
@@ -74,5 +76,25 @@ public class TelaPrincipal extends JFrame {
         getContentPane().setBackground(Tema.FUNDO);
 
         add(abas, BorderLayout.CENTER);
+
+        // Status bar
+        JPanel statusBar = new JPanel(new BorderLayout());
+        statusBar.setBackground(new Color(233, 236, 239));
+        statusBar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Tema.BORDA),
+                BorderFactory.createEmptyBorder(3, 10, 3, 10)));
+        statusBar.setPreferredSize(new Dimension(getWidth(), 25));
+
+        JLabel lblConexao = new JLabel("Conectado a academia_db");
+        lblConexao.setFont(Tema.PEQUENA);
+        lblConexao.setForeground(Tema.SUCESSO);
+        statusBar.add(lblConexao, BorderLayout.WEST);
+
+        JLabel lblData = new JLabel(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        lblData.setFont(Tema.PEQUENA);
+        lblData.setForeground(Tema.TEXTO_SECUNDARIO);
+        statusBar.add(lblData, BorderLayout.EAST);
+
+        add(statusBar, BorderLayout.SOUTH);
     }
 }

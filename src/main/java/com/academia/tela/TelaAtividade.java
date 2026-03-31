@@ -94,6 +94,11 @@ public class TelaAtividade extends JPanel {
         JButton btnDeletar = Tema.botaoPerigo("Deletar");
         JButton btnLimpar = Tema.botaoSecundario("Limpar");
         JButton btnExportar = Tema.botaoExportar("Exportar CSV");
+        btnInserir.setToolTipText("Cadastrar novo registro");
+        btnAlterar.setToolTipText("Alterar registro selecionado");
+        btnDeletar.setToolTipText("Excluir registro selecionado");
+        btnLimpar.setToolTipText("Limpar campos do formulário");
+        btnExportar.setToolTipText("Exportar tabela para arquivo CSV");
         painelBotoes.add(btnInserir);
         painelBotoes.add(btnAlterar);
         painelBotoes.add(btnDeletar);
@@ -102,6 +107,12 @@ public class TelaAtividade extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
         painelForm.add(painelBotoes, gbc);
+
+        JLabel lblAtalhos = new JLabel("Dica: clique na tabela para selecionar um registro");
+        lblAtalhos.setFont(Tema.PEQUENA);
+        lblAtalhos.setForeground(Tema.TEXTO_SECUNDARIO);
+        gbc.gridy = 3;
+        painelForm.add(lblAtalhos, gbc);
 
         add(painelForm, BorderLayout.SOUTH);
 
