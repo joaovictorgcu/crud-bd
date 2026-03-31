@@ -1,6 +1,4 @@
 -- Drop das tabelas (ordem reversa por causa das FKs)
-DROP TABLE IF EXISTS utiliza CASCADE;
-DROP TABLE IF EXISTS frequenta CASCADE;
 DROP TABLE IF EXISTS manutencao CASCADE;
 DROP TABLE IF EXISTS aula CASCADE;
 DROP TABLE IF EXISTS musculacao CASCADE;
@@ -133,13 +131,16 @@ CREATE TABLE aula (
     PRIMARY KEY (cod_ativ, data),
     FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ),
     FOREIGN KEY (cod_modal) REFERENCES modalidade(cod_modal),
-    FOREIGN KEY (cref) REFERENCES instrutor(cref)
+    FOREIGN KEY (cref) REFERENCES instrutor(cref) ON DELETE SET NULL
 );
 
 CREATE TABLE equipamento (
     cod_equip   INTEGER         PRIMARY KEY DEFAULT nextval('seq_equipamento'),
     nome        VARCHAR(100)    NOT NULL,
-    descricao   TEXT            DEFAULT 'Sem descrição'
+    descricao   TEXT            DEFAULT 'Sem descrição',
+    cod_ativ    INTEGER,
+    qtd_utilizada INTEGER      DEFAULT 1 CHECK (qtd_utilizada > 0),
+    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ)
 );
 
 CREATE TABLE manutencao (
@@ -151,24 +152,6 @@ CREATE TABLE manutencao (
     FOREIGN KEY (cod_equip) REFERENCES equipamento(cod_equip)
 );
 
-CREATE TABLE frequenta (
-    nro_matric  INTEGER     NOT NULL,
-    cod_ativ    INTEGER     NOT NULL,
-    hr_entrada  TIMESTAMP   NOT NULL,
-    hr_saida    TIMESTAMP,
-    PRIMARY KEY (nro_matric, cod_ativ, hr_entrada),
-    FOREIGN KEY (nro_matric) REFERENCES aluno(nro_matric),
-    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ)
-);
-
-CREATE TABLE utiliza (
-    cod_ativ        INTEGER     NOT NULL,
-    cod_equip       INTEGER     NOT NULL,
-    qtd_utilizada   INTEGER     DEFAULT 1 CHECK (qtd_utilizada > 0),
-    PRIMARY KEY (cod_ativ, cod_equip),
-    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ),
-    FOREIGN KEY (cod_equip) REFERENCES equipamento(cod_equip)
-);
 
 -- Dados
 
@@ -387,22 +370,22 @@ INSERT INTO modalidade (cod_modal, nome, nivel) VALUES
 (nextval('seq_modalidade'), 'Natação Intermediário', 'INTERMEDIARIO'),
 (nextval('seq_modalidade'), 'Boxe Avançado', 'AVANCADO');
 
-INSERT INTO equipamento (cod_equip, nome, descricao) VALUES
-(nextval('seq_equipamento'), 'Esteira', 'Esteira ergométrica profissional'),
-(nextval('seq_equipamento'), 'Bicicleta Ergométrica', 'Bicicleta para exercícios indoor'),
-(nextval('seq_equipamento'), 'Haltere 10kg', 'Par de halteres de 10 quilos'),
-(nextval('seq_equipamento'), 'Haltere 20kg', 'Par de halteres de 20 quilos'),
-(nextval('seq_equipamento'), 'Barra Olímpica', 'Barra de 20kg para levantamento'),
-(nextval('seq_equipamento'), 'Supino Reto', 'Banco de supino reto com suporte'),
-(nextval('seq_equipamento'), 'Leg Press', 'Aparelho de leg press 45 graus'),
-(nextval('seq_equipamento'), 'Puxador Costas', 'Aparelho de puxada para dorsais'),
-(nextval('seq_equipamento'), 'Corda Naval', 'Corda de batalha para treino funcional'),
-(nextval('seq_equipamento'), 'Kettlebell 16kg', 'Kettlebell de ferro fundido 16kg'),
-(nextval('seq_equipamento'), 'Bola Suica', 'Bola de pilates 65cm'),
-(nextval('seq_equipamento'), 'Saco de Pancada', 'Saco de boxe profissional'),
-(nextval('seq_equipamento'), 'Colchonete', 'Colchonete para exercicios no solo'),
-(nextval('seq_equipamento'), 'Elíptico', 'Aparelho elíptico para cardio'),
-(nextval('seq_equipamento'), 'Smith Machine', 'Maquina Smith para musculação guiada');
+INSERT INTO equipamento (cod_equip, nome, descricao, cod_ativ, qtd_utilizada) VALUES
+(nextval('seq_equipamento'), 'Esteira', 'Esteira ergométrica profissional', 14, 10),
+(nextval('seq_equipamento'), 'Bicicleta Ergométrica', 'Bicicleta para exercícios indoor', 7, 15),
+(nextval('seq_equipamento'), 'Haltere 10kg', 'Par de halteres de 10 quilos', 1, 4),
+(nextval('seq_equipamento'), 'Haltere 20kg', 'Par de halteres de 20 quilos', 1, 2),
+(nextval('seq_equipamento'), 'Barra Olímpica', 'Barra de 20kg para levantamento', 1, 2),
+(nextval('seq_equipamento'), 'Supino Reto', 'Banco de supino reto com suporte', 1, 1),
+(nextval('seq_equipamento'), 'Leg Press', 'Aparelho de leg press 45 graus', 1, 1),
+(nextval('seq_equipamento'), 'Puxador Costas', 'Aparelho de puxada para dorsais', 1, 1),
+(nextval('seq_equipamento'), 'Corda Naval', 'Corda de batalha para treino funcional', 2, 3),
+(nextval('seq_equipamento'), 'Kettlebell 16kg', 'Kettlebell de ferro fundido 16kg', 2, 4),
+(nextval('seq_equipamento'), 'Bola Suíça', 'Bola de pilates 65cm', 6, 8),
+(nextval('seq_equipamento'), 'Saco de Pancada', 'Saco de boxe profissional', 9, 2),
+(nextval('seq_equipamento'), 'Colchonete', 'Colchonete para exercícios no solo', 5, 10),
+(nextval('seq_equipamento'), 'Elíptico', 'Aparelho elíptico para cardio', 14, 5),
+(nextval('seq_equipamento'), 'Smith Machine', 'Máquina Smith para musculação guiada', 1, 1);
 
 INSERT INTO assinatura (dt_assinatura, nro_matric, cod_plano, dt_inicio, dt_fim, status) VALUES
 ('2024-01-10', 1, 1, '2024-01-10', '2024-02-10', 'VENCIDA'),
@@ -498,40 +481,6 @@ INSERT INTO pagamento (cod_pgto, dt_venc, status, valor, dt_assinatura, nro_matr
 (nextval('seq_pagamento'), '2024-11-01', 'PAGO', 59.90, '2024-11-01', 30, 28),
 (nextval('seq_pagamento'), '2024-12-01', 'PENDENTE', 59.90, '2024-11-01', 30, 28);
 
-INSERT INTO frequenta (nro_matric, cod_ativ, hr_entrada, hr_saida) VALUES
-(1, 1, '2024-06-01 07:00:00', '2024-06-01 08:30:00'),
-(2, 1, '2024-06-01 09:00:00', '2024-06-01 10:00:00'),
-(3, 4, '2024-06-02 06:30:00', '2024-06-02 07:30:00'),
-(5, 5, '2024-06-02 08:00:00', '2024-06-02 09:15:00'),
-(6, 6, '2024-06-03 10:00:00', '2024-06-03 11:00:00'),
-(8, 7, '2024-06-03 18:00:00', '2024-06-03 19:00:00'),
-(9, 8, '2024-06-04 07:00:00', '2024-06-04 08:00:00'),
-(10, 9, '2024-06-04 17:00:00', '2024-06-04 18:00:00'),
-(12, 10, '2024-06-05 08:30:00', '2024-06-05 09:30:00'),
-(13, 11, '2024-06-05 19:00:00', '2024-06-05 20:30:00'),
-(14, 1, '2024-06-06 06:00:00', '2024-06-06 07:30:00'),
-(16, 2, '2024-06-06 10:00:00', '2024-06-06 11:00:00'),
-(17, 12, '2024-06-07 07:00:00', '2024-06-07 07:45:00'),
-(18, 13, '2024-06-07 09:00:00', '2024-06-07 10:00:00'),
-(20, 14, '2024-06-08 06:30:00', '2024-06-08 07:30:00'),
-(21, 15, '2024-06-08 17:00:00', '2024-06-08 17:45:00'),
-(22, 4, '2024-06-09 08:00:00', '2024-06-09 09:00:00'),
-(25, 5, '2024-06-09 10:00:00', '2024-06-09 11:15:00'),
-(26, 7, '2024-06-10 18:30:00', '2024-06-10 19:30:00'),
-(29, 1, '2024-06-10 07:00:00', NULL);
-
-INSERT INTO utiliza (cod_ativ, cod_equip, qtd_utilizada) VALUES
-(1, 3, 4),
-(1, 4, 2),
-(1, 5, 2),
-(1, 6, 1),
-(2, 9, 3),
-(2, 10, 4),
-(4, 5, 2),
-(6, 11, 8),
-(7, 2, 15),
-(14, 1, 10);
-
 INSERT INTO aula (cod_ativ, data, status, cod_modal, cref) VALUES
 (4, '2024-06-01', 'REALIZADA', 1, 'CREF-003'),
 (4, '2024-06-03', 'REALIZADA', 2, 'CREF-003'),
@@ -560,3 +509,166 @@ INSERT INTO manutencao (cod_manut, data, tipo, custo, cod_equip) VALUES
 (nextval('seq_manutencao'), '2024-10-18', 'Corretiva', 450.00, 14),
 (nextval('seq_manutencao'), '2024-11-05', 'Preventiva', 200.00, 15),
 (nextval('seq_manutencao'), '2024-12-01', 'Lubrificação', 75.00, 6);
+
+-- ============================================================
+-- DADOS ADICIONAIS PARA COMPLETAR 30 TUPLAS POR TABELA
+-- ============================================================
+
+-- Novas pessoas (para novos instrutores, CREF-016 a CREF-030)
+INSERT INTO pessoa (cpf, nome, email, dt_nasc, rua, bairro, cep) VALUES
+('500.500.500-50', 'Carlos Eduardo Menezes', 'carlos.menezes@email.com', '1981-03-12', 'Rua do Lima, 55', 'Afogados', '50770-000'),
+('510.510.510-51', 'Aline Barros Feitosa', 'aline.feitosa@email.com', '1984-07-08', 'Rua Cosme Viana, 210', 'Iputinga', '50670-000'),
+('520.520.520-52', 'Rodrigo Alves Pinheiro', 'rodrigo.alves@email.com', '1979-11-25', 'Av. Caxanga, 1200', 'Iputinga', '50670-100'),
+('530.530.530-53', 'Jéssica Moreira Lins', 'jessica.moreira@email.com', '1986-02-18', 'Rua Real da Torre, 400', 'Madalena', '50610-100'),
+('540.540.540-54', 'André Luiz Cavalcante', 'andre.cavalcante@email.com', '1983-06-30', 'Rua Marquês de Recife, 80', 'Santo Amaro', '50040-300'),
+('550.550.550-55', 'Priscila Santos Aguiar', 'priscila.santos@email.com', '1987-09-14', 'Rua da Harmonia, 65', 'Casa Amarela', '52070-000'),
+('560.560.560-56', 'Matheus Henrique Rocha', 'matheus.rocha@email.com', '1990-01-22', 'Rua Padre Lemos, 130', 'Encruzilhada', '52030-000'),
+('570.570.570-57', 'Débora Cristina Mota', 'debora.mota@email.com', '1982-08-05', 'Av. Norte, 1500', 'Tamarineira', '52060-200'),
+('580.580.580-58', 'Felipe Henrique Dantas', 'felipe.dantas@email.com', '1985-04-17', 'Rua José Bonifácio, 90', 'Torre', '50710-200'),
+('590.590.590-59', 'Luciana Ferreira Borges', 'luciana.borges@email.com', '1988-12-28', 'Rua Gervásio Pires, 200', 'Boa Vista', '50050-000'),
+('600.600.600-60', 'Tiago Nascimento Lima', 'tiago.nascimento@email.com', '1980-05-03', 'Rua do Sossego, 35', 'Santo Amaro', '50050-100'),
+('610.610.610-61', 'Natália Vieira Costa', 'natalia.vieira@email.com', '1989-10-11', 'Av. Sport Clube do Recife, 500', 'Ilha do Retiro', '50750-000'),
+('620.620.620-62', 'Bruno Henrique Tavares', 'bruno.tavares@email.com', '1981-07-19', 'Rua Benfica, 300', 'Madalena', '50720-100'),
+('630.630.630-63', 'Raquel Oliveira Braga', 'raquel.braga@email.com', '1986-03-26', 'Rua do Futuro, 120', 'Graças', '52011-500'),
+('640.640.640-64', 'Marcelo Augusto Dias', 'marcelo.dias@email.com', '1983-11-09', 'Rua Amazonas, 75', 'Boa Viagem', '51030-200');
+
+-- Telefones dos novos instrutores
+INSERT INTO telefone_pessoa (cpf, telefone) VALUES
+('500.500.500-50', '(81) 96500-5050'),
+('510.510.510-51', '(81) 96510-5151'),
+('520.520.520-52', '(81) 96520-5252'),
+('530.530.530-53', '(81) 96530-5353'),
+('540.540.540-54', '(81) 96540-5454'),
+('550.550.550-55', '(81) 96550-5555'),
+('560.560.560-56', '(81) 96560-5656'),
+('570.570.570-57', '(81) 96570-5757'),
+('580.580.580-58', '(81) 96580-5858'),
+('590.590.590-59', '(81) 96590-5959'),
+('600.600.600-60', '(81) 96600-6060'),
+('610.610.610-61', '(81) 96610-6161'),
+('620.620.620-62', '(81) 96620-6262'),
+('630.630.630-63', '(81) 96630-6363'),
+('640.640.640-64', '(81) 96640-6464');
+
+-- Novos instrutores (CREF-016 a CREF-030)
+-- Alguns sem supervisor, outros com supervisor
+INSERT INTO instrutor (cref, salario, dt_admissao, cpf, cref_supervisor) VALUES
+('CREF-016', 4700.00, '2022-02-10', '500.500.500-50', NULL),
+('CREF-017', 4200.00, '2022-05-20', '510.510.510-51', NULL),
+('CREF-018', 3900.00, '2022-09-01', '520.520.520-52', 'CREF-001'),
+('CREF-019', 4100.00, '2023-01-15', '530.530.530-53', 'CREF-002'),
+('CREF-020', 3800.00, '2023-04-10', '540.540.540-54', 'CREF-003'),
+('CREF-021', 4500.00, '2023-06-20', '550.550.550-55', 'CREF-016'),
+('CREF-022', 3600.00, '2023-08-05', '560.560.560-56', 'CREF-016'),
+('CREF-023', 4000.00, '2023-10-12', '570.570.570-57', 'CREF-017'),
+('CREF-024', 3700.00, '2024-01-08', '580.580.580-58', 'CREF-017'),
+('CREF-025', 3500.00, '2024-03-15', '590.590.590-59', 'CREF-003'),
+('CREF-026', 4300.00, '2024-05-01', '600.600.600-60', NULL),
+('CREF-027', 3400.00, '2024-06-10', '610.610.610-61', 'CREF-026'),
+('CREF-028', 3600.00, '2024-07-20', '620.620.620-62', 'CREF-026'),
+('CREF-029', 3300.00, '2024-09-05', '630.630.630-63', 'CREF-016'),
+('CREF-030', 3500.00, '2024-10-15', '640.640.640-64', 'CREF-017');
+
+-- Novas atividades (cod_ativ 16 a 30)
+INSERT INTO atividade (cod_ativ, nome, descricao) VALUES
+(nextval('seq_atividade'), 'Musculação para Iniciantes', 'Treino de musculação voltado para quem está começando'),
+(nextval('seq_atividade'), 'Musculação Avançada', 'Treino pesado com foco em hipertrofia e força'),
+(nextval('seq_atividade'), 'Musculação para Idosos', 'Musculação adaptada para a terceira idade'),
+(nextval('seq_atividade'), 'Musculação Feminina', 'Treino de musculação com foco no público feminino'),
+(nextval('seq_atividade'), 'Musculação Esportiva', 'Musculação voltada para atletas e desempenho esportivo'),
+(nextval('seq_atividade'), 'Musculação com Kettlebell', 'Treino de força com kettlebells'),
+(nextval('seq_atividade'), 'Musculação de Resistência', 'Treino focado em resistência muscular com altas repetições'),
+(nextval('seq_atividade'), 'Dança de Salão', 'Aula de dança com diversos ritmos de salão'),
+(nextval('seq_atividade'), 'Capoeira', 'Arte marcial brasileira com música e ginga'),
+(nextval('seq_atividade'), 'Funcional ao Ar Livre', 'Treino funcional realizado na área externa'),
+(nextval('seq_atividade'), 'Step', 'Aula de step com coreografias e ritmo'),
+(nextval('seq_atividade'), 'Body Pump', 'Aula coletiva com barras e anilhas no ritmo da música'),
+(nextval('seq_atividade'), 'Tai Chi Chuan', 'Arte marcial interna chinesa com movimentos lentos'),
+(nextval('seq_atividade'), 'Muay Thai', 'Arte marcial tailandesa de combate'),
+(nextval('seq_atividade'), 'Treino de Core', 'Exercícios focados no fortalecimento do abdômen e lombar');
+
+-- Novas entradas em musculacao (cod_ativ 16 a 22 são musculação)
+INSERT INTO musculacao (cod_ativ) VALUES
+(16), (17), (18), (19), (20), (21), (22);
+
+-- Novas modalidades (cod_modal 11 a 30)
+INSERT INTO modalidade (cod_modal, nome, nivel) VALUES
+(nextval('seq_modalidade'), 'Zumba Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Zumba Intermediário', 'INTERMEDIARIO'),
+(nextval('seq_modalidade'), 'Jiu-Jitsu Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Jiu-Jitsu Avançado', 'AVANCADO'),
+(nextval('seq_modalidade'), 'Alongamento Livre', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Hidroginástica Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Hidroginástica Avançado', 'AVANCADO'),
+(nextval('seq_modalidade'), 'HIIT Intermediário', 'INTERMEDIARIO'),
+(nextval('seq_modalidade'), 'HIIT Avançado', 'AVANCADO'),
+(nextval('seq_modalidade'), 'Dança de Salão Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Capoeira Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Capoeira Intermediário', 'INTERMEDIARIO'),
+(nextval('seq_modalidade'), 'Funcional Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Step Intermediário', 'INTERMEDIARIO'),
+(nextval('seq_modalidade'), 'Body Pump Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Body Pump Avançado', 'AVANCADO'),
+(nextval('seq_modalidade'), 'Tai Chi Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Muay Thai Iniciante', 'INICIANTE'),
+(nextval('seq_modalidade'), 'Muay Thai Avançado', 'AVANCADO'),
+(nextval('seq_modalidade'), 'Core Training', 'INTERMEDIARIO');
+
+-- Novos equipamentos (cod_equip 16 a 30)
+INSERT INTO equipamento (cod_equip, nome, descricao, cod_ativ, qtd_utilizada) VALUES
+(nextval('seq_equipamento'), 'Anilha 10kg', 'Par de anilhas de ferro de 10 quilos', 1, 6),
+(nextval('seq_equipamento'), 'Anilha 20kg', 'Par de anilhas de ferro de 20 quilos', 1, 4),
+(nextval('seq_equipamento'), 'Banco Reclinável', 'Banco ajustável para musculação', 2, 2),
+(nextval('seq_equipamento'), 'Cross Over', 'Aparelho de cabos cruzados', 1, 1),
+(nextval('seq_equipamento'), 'Cadeira Extensora', 'Aparelho para extensão de pernas', 1, 2),
+(nextval('seq_equipamento'), 'Cadeira Flexora', 'Aparelho para flexão de pernas', 1, 2),
+(nextval('seq_equipamento'), 'Prancha Abdominal', 'Prancha inclinada para exercícios abdominais', 30, 3),
+(nextval('seq_equipamento'), 'Rolo de Espuma', 'Rolo para liberação miofascial', 12, 6),
+(nextval('seq_equipamento'), 'Faixa Elástica', 'Kit de faixas elásticas de resistência', 16, 10),
+(nextval('seq_equipamento'), 'Corda de Pular', 'Corda de pular com rolamento', 15, 8),
+(nextval('seq_equipamento'), 'Barra Fixa', 'Barra fixa de parede para pull-ups', 2, 2),
+(nextval('seq_equipamento'), 'Aparelho Voador', 'Aparelho peck deck para peitorais', 1, 1),
+(nextval('seq_equipamento'), 'Step Board', 'Plataforma para aula de step', 26, 12),
+(nextval('seq_equipamento'), 'Luvas de Boxe', 'Par de luvas de boxe 12oz', 29, 10),
+(nextval('seq_equipamento'), 'Caneleira 3kg', 'Par de caneleiras de 3 quilos', 18, 8);
+
+-- Novas aulas (15 novas, PK = cod_ativ + data)
+INSERT INTO aula (cod_ativ, data, status, cod_modal, cref) VALUES
+(10, '2024-07-01', 'REALIZADA', 11, 'CREF-009'),
+(10, '2024-07-15', 'REALIZADA', 12, 'CREF-009'),
+(11, '2024-07-03', 'REALIZADA', 13, 'CREF-010'),
+(11, '2024-08-10', 'REALIZADA', 14, 'CREF-010'),
+(12, '2024-08-05', 'REALIZADA', 15, 'CREF-011'),
+(13, '2024-08-12', 'REALIZADA', 16, 'CREF-012'),
+(13, '2024-09-02', 'CANCELADA', 17, 'CREF-012'),
+(14, '2024-09-10', 'REALIZADA', 18, 'CREF-013'),
+(15, '2024-09-15', 'REALIZADA', 19, 'CREF-014'),
+(23, '2024-10-01', 'REALIZADA', 20, 'CREF-018'),
+(24, '2024-10-08', 'AGENDADA', 21, 'CREF-019'),
+(25, '2024-10-15', 'REALIZADA', 22, 'CREF-020'),
+(26, '2024-11-01', 'AGENDADA', 24, 'CREF-021'),
+(29, '2024-11-10', 'REALIZADA', 28, 'CREF-025'),
+(30, '2024-11-20', 'AGENDADA', 30, 'CREF-016');
+
+-- Novas manutencoes (20 novas, cod_equip de 1 a 30)
+INSERT INTO manutencao (cod_manut, data, tipo, custo, cod_equip) VALUES
+(nextval('seq_manutencao'), '2025-01-10', 'Preventiva', 130.00, 1),
+(nextval('seq_manutencao'), '2025-01-20', 'Corretiva', 280.00, 3),
+(nextval('seq_manutencao'), '2025-02-05', 'Lubrificação', 60.00, 7),
+(nextval('seq_manutencao'), '2025-02-15', 'Troca de peça', 410.00, 2),
+(nextval('seq_manutencao'), '2025-03-01', 'Preventiva', 90.00, 9),
+(nextval('seq_manutencao'), '2025-03-12', 'Corretiva', 320.00, 14),
+(nextval('seq_manutencao'), '2025-03-25', 'Preventiva', 100.00, 10),
+(nextval('seq_manutencao'), '2025-04-08', 'Lubrificação', 55.00, 5),
+(nextval('seq_manutencao'), '2025-04-18', 'Troca de peça', 380.00, 1),
+(nextval('seq_manutencao'), '2025-05-02', 'Preventiva', 70.00, 11),
+(nextval('seq_manutencao'), '2025-05-15', 'Corretiva', 490.00, 15),
+(nextval('seq_manutencao'), '2025-06-01', 'Preventiva', 85.00, 16),
+(nextval('seq_manutencao'), '2025-06-20', 'Troca de peça', 250.00, 17),
+(nextval('seq_manutencao'), '2025-07-05', 'Lubrificação', 45.00, 20),
+(nextval('seq_manutencao'), '2025-07-18', 'Corretiva', 360.00, 22),
+(nextval('seq_manutencao'), '2025-08-01', 'Preventiva', 110.00, 24),
+(nextval('seq_manutencao'), '2025-08-22', 'Troca de peça', 520.00, 26),
+(nextval('seq_manutencao'), '2025-09-10', 'Preventiva', 95.00, 28),
+(nextval('seq_manutencao'), '2025-09-28', 'Corretiva', 430.00, 29),
+(nextval('seq_manutencao'), '2025-10-15', 'Lubrificação', 65.00, 30);

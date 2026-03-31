@@ -159,10 +159,6 @@ public class AlunoDAO {
                 stmt.setInt(1, nroMatric);
                 stmt.executeUpdate();
             }
-            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM frequenta WHERE nro_matric = ?")) {
-                stmt.setInt(1, nroMatric);
-                stmt.executeUpdate();
-            }
             try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM aluno WHERE nro_matric = ?")) {
                 stmt.setInt(1, nroMatric);
                 stmt.executeUpdate();

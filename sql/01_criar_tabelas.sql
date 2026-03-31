@@ -1,6 +1,4 @@
 -- Drop das tabelas (ordem reversa por causa das FKs)
-DROP TABLE IF EXISTS utiliza CASCADE;
-DROP TABLE IF EXISTS frequenta CASCADE;
 DROP TABLE IF EXISTS manutencao CASCADE;
 DROP TABLE IF EXISTS aula CASCADE;
 DROP TABLE IF EXISTS musculacao CASCADE;
@@ -133,13 +131,16 @@ CREATE TABLE aula (
     PRIMARY KEY (cod_ativ, data),
     FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ),
     FOREIGN KEY (cod_modal) REFERENCES modalidade(cod_modal),
-    FOREIGN KEY (cref) REFERENCES instrutor(cref)
+    FOREIGN KEY (cref) REFERENCES instrutor(cref) ON DELETE SET NULL
 );
 
 CREATE TABLE equipamento (
     cod_equip   INTEGER         PRIMARY KEY DEFAULT nextval('seq_equipamento'),
     nome        VARCHAR(100)    NOT NULL,
-    descricao   TEXT            DEFAULT 'Sem descrição'
+    descricao   TEXT            DEFAULT 'Sem descrição',
+    cod_ativ    INTEGER,
+    qtd_utilizada INTEGER      DEFAULT 1 CHECK (qtd_utilizada > 0),
+    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ)
 );
 
 CREATE TABLE manutencao (
@@ -151,21 +152,3 @@ CREATE TABLE manutencao (
     FOREIGN KEY (cod_equip) REFERENCES equipamento(cod_equip)
 );
 
-CREATE TABLE frequenta (
-    nro_matric  INTEGER     NOT NULL,
-    cod_ativ    INTEGER     NOT NULL,
-    hr_entrada  TIMESTAMP   NOT NULL,
-    hr_saida    TIMESTAMP,
-    PRIMARY KEY (nro_matric, cod_ativ, hr_entrada),
-    FOREIGN KEY (nro_matric) REFERENCES aluno(nro_matric),
-    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ)
-);
-
-CREATE TABLE utiliza (
-    cod_ativ        INTEGER     NOT NULL,
-    cod_equip       INTEGER     NOT NULL,
-    qtd_utilizada   INTEGER     DEFAULT 1 CHECK (qtd_utilizada > 0),
-    PRIMARY KEY (cod_ativ, cod_equip),
-    FOREIGN KEY (cod_ativ) REFERENCES atividade(cod_ativ),
-    FOREIGN KEY (cod_equip) REFERENCES equipamento(cod_equip)
-);
