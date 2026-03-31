@@ -137,40 +137,54 @@ public class AlunoDAO {
         }
     }
 
-    public void deletar(int nroMatric) {
+    public void deletar(int nroMatric) throws SQLException {
         Connection conn = null;
-        PreparedStatement stmtGetCpf = null;
-        PreparedStatement stmtDelAluno = null;
-        PreparedStatement stmtDelPessoa = null;
-        ResultSet rs = null;
         try {
             conn = ConexaoBD.getConexao();
             conn.setAutoCommit(false);
 
-            stmtGetCpf = conn.prepareStatement("SELECT cpf FROM aluno WHERE nro_matric = ?");
-            stmtGetCpf.setInt(1, nroMatric);
-            rs = stmtGetCpf.executeQuery();
             String cpf = null;
-            if (rs.next()) {
-                cpf = rs.getString("cpf");
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT cpf FROM aluno WHERE nro_matric = ?")) {
+                stmt.setInt(1, nroMatric);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) cpf = rs.getString("cpf");
             }
 
-            stmtDelAluno = conn.prepareStatement("DELETE FROM aluno WHERE nro_matric = ?");
-            stmtDelAluno.setInt(1, nroMatric);
-            stmtDelAluno.executeUpdate();
+            // deletar dependencias do aluno
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM pagamento WHERE nro_matric = ?")) {
+                stmt.setInt(1, nroMatric);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM assinatura WHERE nro_matric = ?")) {
+                stmt.setInt(1, nroMatric);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM frequenta WHERE nro_matric = ?")) {
+                stmt.setInt(1, nroMatric);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM aluno WHERE nro_matric = ?")) {
+                stmt.setInt(1, nroMatric);
+                stmt.executeUpdate();
+            }
 
             if (cpf != null) {
-                stmtDelPessoa = conn.prepareStatement("DELETE FROM pessoa WHERE cpf = ?");
-                stmtDelPessoa.setString(1, cpf);
-                stmtDelPessoa.executeUpdate();
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM telefone_pessoa WHERE cpf = ?")) {
+                    stmt.setString(1, cpf);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM pessoa WHERE cpf = ?")) {
+                    stmt.setString(1, cpf);
+                    stmt.executeUpdate();
+                }
             }
 
             conn.commit();
         } catch (SQLException e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            throw e;
         } finally {
-            ConexaoBD.fechar(rs, stmtDelPessoa, stmtDelAluno, stmtGetCpf, conn);
+            ConexaoBD.fechar(conn);
         }
     }
 }

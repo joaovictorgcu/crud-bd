@@ -122,40 +122,50 @@ public class InstrutorDAO {
         }
     }
 
-    public void deletar(String cref) {
+    public void deletar(String cref) throws SQLException {
         Connection conn = null;
-        PreparedStatement stmtGetCpf = null;
-        PreparedStatement stmtDelInstrutor = null;
-        PreparedStatement stmtDelPessoa = null;
-        ResultSet rs = null;
         try {
             conn = ConexaoBD.getConexao();
             conn.setAutoCommit(false);
 
-            stmtGetCpf = conn.prepareStatement("SELECT cpf FROM instrutor WHERE cref = ?");
-            stmtGetCpf.setString(1, cref);
-            rs = stmtGetCpf.executeQuery();
             String cpf = null;
-            if (rs.next()) {
-                cpf = rs.getString("cpf");
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT cpf FROM instrutor WHERE cref = ?")) {
+                stmt.setString(1, cref);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) cpf = rs.getString("cpf");
             }
 
-            stmtDelInstrutor = conn.prepareStatement("DELETE FROM instrutor WHERE cref = ?");
-            stmtDelInstrutor.setString(1, cref);
-            stmtDelInstrutor.executeUpdate();
+            // limpar referencias ao instrutor
+            try (PreparedStatement stmt = conn.prepareStatement("UPDATE aula SET cref = NULL WHERE cref = ?")) {
+                stmt.setString(1, cref);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("UPDATE instrutor SET cref_supervisor = NULL WHERE cref_supervisor = ?")) {
+                stmt.setString(1, cref);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM instrutor WHERE cref = ?")) {
+                stmt.setString(1, cref);
+                stmt.executeUpdate();
+            }
 
             if (cpf != null) {
-                stmtDelPessoa = conn.prepareStatement("DELETE FROM pessoa WHERE cpf = ?");
-                stmtDelPessoa.setString(1, cpf);
-                stmtDelPessoa.executeUpdate();
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM telefone_pessoa WHERE cpf = ?")) {
+                    stmt.setString(1, cpf);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM pessoa WHERE cpf = ?")) {
+                    stmt.setString(1, cpf);
+                    stmt.executeUpdate();
+                }
             }
 
             conn.commit();
         } catch (SQLException e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            throw e;
         } finally {
-            ConexaoBD.fechar(rs, stmtDelPessoa, stmtDelInstrutor, stmtGetCpf, conn);
+            ConexaoBD.fechar(conn);
         }
     }
 }
