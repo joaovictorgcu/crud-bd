@@ -116,6 +116,16 @@ ENTREGA_BD_copia/
 ├── sql/
 │   ├── 01_criar_tabelas.sql
 │   └── 02_inserir_dados.sql
+├── src/
+│   ├── Main.java                  -- Menu interativo (console)
+│   ├── conexao/
+│   │   └── ConexaoBD.java         -- Conexão centralizada com o banco
+│   ├── modelo/
+│   │   ├── Departamento.java      -- Entidade Departamento (getters/setters)
+│   │   └── Funcionario.java       -- Entidade Funcionario (getters/setters)
+│   └── dao/
+│       ├── DepartamentoDAO.java   -- CRUD de departamento
+│       └── FuncionarioDAO.java    -- CRUD de funcionario
 └── src/main/java/com/academia/
     ├── Main.java
     ├── conexao/
@@ -149,3 +159,12 @@ ENTREGA_BD_copia/
         ├── TelaAtividade.java
         └── TelaEquipamento.java
 ```
+
+### Arquitetura POO (src/)
+
+O código em `src/` segue o padrão DAO com separação em camadas:
+
+- **modelo/** — Classes de domínio (`Departamento`, `Funcionario`) com atributos privados, construtores, getters e setters (encapsulamento)
+- **dao/** — Data Access Objects que concentram todo o SQL de cada entidade, retornando objetos e listas tipadas
+- **conexao/** — Classe utilitária que centraliza os parâmetros de conexão JDBC
+- **Main.java** — Ponto de entrada com menu interativo que delega operações para os DAOs
