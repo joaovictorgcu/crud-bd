@@ -81,7 +81,7 @@ BEGIN
 
         BEGIN
             UPDATE  assinatura
-               SET  status = 'ENCERRADA'
+               SET  status = 'VENCIDA'
              WHERE  dt_assinatura = rec.dt_assinatura
                AND  nro_matric    = rec.nro_matric
                AND  cod_plano     = rec.cod_plano;
